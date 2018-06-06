@@ -104,8 +104,8 @@ for ifile to numberOfFiles
 
 
 				# set middle 60% start and end
-				midstart = start + (0.2*duration)
-				midend = end - (0.2*duration)
+				midstart = start + (0.2 * duration)
+				midend = end - (0.2 * duration)
 
 				# get the intensity at midpoint
 				# TODO
