@@ -149,13 +149,14 @@ for ifile to numberOfFiles
 		endfor
 		# Remove the TextGrid object from the object list
 		select TextGrid 'soundname$'
+		plus Pitch 'soundname$'
 		Remove
 	endif
 	# Remove the temporary objects from the object list
 	select Sound 'soundname$'
 	#plus Formant 'soundname$'
-	plus TextGrid 'soundname$'
-	plus Pitch 'soundname$'
+	#plus TextGrid 'soundname$'
+	#plus Pitch 'soundname$'
 	Remove
 	select Strings list
 	# and go on with the next sound file!
