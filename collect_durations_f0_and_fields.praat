@@ -2,7 +2,8 @@
 # opens each pair of Sound and TextGrid, and for each labelled
 # segment in the specified Tier:
 # - measures duration of each segment,
-# - measures f0 mean and max of each segment,
+# - measures f0 mean across middle 60%,
+# - measures f0 max and min across whole segment,
 # - outputs label of the segment in the main tier,
 # - outputs lables of other tiers at the midpoint of the specified tier,
 # and saves results to a text file.
@@ -60,7 +61,7 @@ endfor
 # Write a row with column titles to the result file:
 # (remember to edit this if you add or change the analyses!)
 
-titleline$ = "filename	'titleline$'	vowel	duration	f0	f0max'newline$'"
+titleline$ = "filename	'titleline$'	vowel	duration	f0	f0max	f0min'newline$'"
 fileappend "'resultfile$'" 'titleline$'
 
 # Go through all the sound files, one by one:
@@ -102,6 +103,10 @@ for ifile to numberOfFiles
 #				f3 = Get value at time... 3 midpoint Hertz Linear
 
 
+				# set middle 60% start and end
+				midstart = start + (0.2*duration)
+				midend = start - (0.2*duration)
+
 				# get the intensity at midpoint
 				# TODO
 
@@ -111,11 +116,14 @@ for ifile to numberOfFiles
 				# load pitch object
 				select Pitch 'soundname$'
 				
-				# get the mean pitch for span
-				pitch = Get mean... start end Hertz
+				# get the mean pitch for middle 60% span
+				pitch = Get mean... midstart midend Hertz
 
 				# get max pitch in span
 				maxPitch = Get maximum... start end Hertz None
+
+				# get max pitch in span
+				minPitch = Get minimum... start end Hertz None
 
 				select TextGrid 'soundname$'
 				# get values of other tiers
@@ -133,7 +141,7 @@ for ifile to numberOfFiles
 				# Save result to text file:
 				#resultline$ = soundname$
 
-				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration'	'pitch'	'maxPitch''newline$'"
+				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration'	'pitch'	'maxPitch'	'minPitch''newline$'"
 
 				fileappend "'resultfile$'" 'resultline$'
 				select TextGrid 'soundname$'
