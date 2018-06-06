@@ -2,6 +2,7 @@
 # opens each pair of Sound and TextGrid, and for each labelled
 # segment in the specified Tier:
 # - measures duration of each segment,
+# - measures f0 mean and max of each segment,
 # - outputs label of the segment in the main tier,
 # - outputs lables of other tiers at the midpoint of the specified tier,
 # and saves results to a text file.
@@ -15,19 +16,23 @@
 # This version by Jonathan Washington, last revised 2018-06-06
 
 # Analyze formant values from labeled segments in files
-form Measure duration and get segment labels
+form Measure duration and pitch, and get segment labels
 	comment Directory of sound files
-	text sound_directory /data/Documents/projects/2018-06 Astana/a_words/
-	sentence Sound_file_extension .flac
+	text sound_directory /data/Documents/projects/2018-06 Astana/NU_s9_Eng3/
+	sentence Sound_file_extension .wav
 	comment Directory of TextGrid files
-	text textGrid_directory /data/Documents/projects/2018-06 Astana/a_words/
+	text textGrid_directory /data/Documents/projects/2018-06 Astana/NU_s9_Eng3/
 	sentence TextGrid_file_extension .TextGrid
 	comment Full path of the resulting text file:
-	text resultfile /data/Documents/projects/2018-06 Astana/a_words/durationresults.txt
+	text resultfile /data/Documents/projects/2018-06 Astana/NU_s9_Eng3/durationresults.txt
 	comment Which tier do you want to measure duration of?
 	sentence Tier vowel
 	comment What other tiers to record?
-	sentence otherTiers word stress syllnum
+	sentence otherTiers word POS syllable stress vowel condition repetition
+	comment Pitch analysis settings
+	real time_step 0.0
+	positive min_pitch 75.0
+	positive max_pitch 600.0
 endform
 
 # Here, you make a listing of all the sound files in a directory.
@@ -55,7 +60,7 @@ endfor
 # Write a row with column titles to the result file:
 # (remember to edit this if you add or change the analyses!)
 
-titleline$ = "filename	'titleline$'	vowel	duration'newline$'"
+titleline$ = "filename	'titleline$'	vowel	duration	f0	f0max'newline$'"
 fileappend "'resultfile$'" 'titleline$'
 
 # Go through all the sound files, one by one:
@@ -75,6 +80,12 @@ for ifile to numberOfFiles
 		# Find the tier number that has the label given in the form:
 		call GetTier 'tier$' tier
 		numberOfIntervals = Get number of intervals... tier
+
+		# make a Pitch object
+		select Sound 'soundname$'
+		To Pitch... time_step min_pitch max_pitch
+
+		select TextGrid 'soundname$'
 		# Pass through all intervals in the selected tier:
 		for interval to numberOfIntervals
 			label$ = Get label of interval... tier interval
@@ -90,7 +101,24 @@ for ifile to numberOfFiles
 #				f2 = Get value at time... 2 midpoint Hertz Linear
 #				f3 = Get value at time... 3 midpoint Hertz Linear
 
-				#select TextGrid 'soundname$'
+
+				# get the intensity at midpoint
+				# TODO
+
+				# get max intensity in range
+				# TODO
+
+				# load pitch object
+				select Pitch 'soundname$'
+				
+				# get the mean pitch for span
+				pitch = Get mean... start end Hertz
+
+				# get max pitch in span
+				maxPitch = Get maximum... start end Hertz None
+
+				select TextGrid 'soundname$'
+				# get values of other tiers
 				otherValues$ = ""
 				for t to total_tiers
 					thisTier$ = split.array$[t]
@@ -105,7 +133,7 @@ for ifile to numberOfFiles
 				# Save result to text file:
 				#resultline$ = soundname$
 
-				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration''newline$'"
+				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration'	'pitch'	'maxPitch''newline$'"
 
 				fileappend "'resultfile$'" 'resultline$'
 				select TextGrid 'soundname$'
@@ -118,6 +146,8 @@ for ifile to numberOfFiles
 	# Remove the temporary objects from the object list
 	select Sound 'soundname$'
 	#plus Formant 'soundname$'
+	plus TextGrid 'soundname$'
+	plus Pitch 'soundname$'
 	Remove
 	select Strings list
 	# and go on with the next sound file!
