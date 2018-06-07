@@ -26,14 +26,20 @@ form Measure duration and pitch, and get segment labels
 	sentence TextGrid_file_extension .TextGrid
 	comment Full path of the resulting text file:
 	text resultfile /data/Documents/projects/2018-06 Astana/NU_s9_Eng3/durationresults.txt
-	comment Which tier do you want to measure duration of?
+	comment Which tier do you want to measure?
 	sentence Tier vowel
 	comment What other tiers to record?
 	sentence otherTiers word POS syllable stress vowel condition repetition
-	comment Pitch analysis settings
-	real time_step 0.0
+	comment Pitch analysis parameters
+	real pitch_time_step 0.0
 	positive min_pitch 75.0
 	positive max_pitch 600.0
+	comment Formant analysis parameters
+	positive formant_time_step 0.01
+	integer Maximum_number_of_formants 5
+	positive Maximum_formant_(Hz) 5500_(=adult female)
+	positive Window_length_(s) 0.025
+	real Preemphasis_from_(Hz) 50
 endform
 
 # Here, you make a listing of all the sound files in a directory.
@@ -61,7 +67,7 @@ endfor
 # Write a row with column titles to the result file:
 # (remember to edit this if you add or change the analyses!)
 
-titleline$ = "filename	'titleline$'	vowel	duration	f0	f0max	f0min'newline$'"
+titleline$ = "filename	'titleline$'	vowel	duration	f0	f0max	f0min	f1	f2	f3	intensity_max	intensity_mid'newline$'"
 fileappend "'resultfile$'" 'titleline$'
 
 # Go through all the sound files, one by one:
@@ -84,7 +90,15 @@ for ifile to numberOfFiles
 
 		# make a Pitch object
 		select Sound 'soundname$'
-		To Pitch... time_step min_pitch max_pitch
+		To Pitch... pitch_time_step min_pitch max_pitch
+
+		# make an Intensity object
+		select Sound 'soundname$'
+		To Intensity... min_pitch pitch_time_step
+
+		# make a Formant object
+		select Sound 'soundname$'
+		To Formant (burg)... formant_time_step maximum_number_of_formants maximum_formant window_length preemphasis_from
 
 		select TextGrid 'soundname$'
 		# Pass through all intervals in the selected tier:
@@ -96,34 +110,45 @@ for ifile to numberOfFiles
 				end = Get end point... tier interval
 				midpoint = (start + end) / 2
 				duration = end - start
-#				# get the formant values at that interval
-#				select Formant 'soundname$'
-#				f1 = Get value at time... 1 midpoint Hertz Linear
-#				f2 = Get value at time... 2 midpoint Hertz Linear
-#				f3 = Get value at time... 3 midpoint Hertz Linear
-
-
 				# set middle 60% start and end
 				midstart = start + (0.2 * duration)
 				midend = end - (0.2 * duration)
 
-				# get the intensity at midpoint
-				# TODO
 
+				# get the formant values at that interval
+				select Formant 'soundname$'
+				f1 = Get value at time... 1 midpoint Hertz Linear
+				f2 = Get value at time... 2 midpoint Hertz Linear
+				f3 = Get value at time... 3 midpoint Hertz Linear
+
+				# load intensity object
+				select Intensity 'soundname$'
+				# get the intensity at midpoint
+				midIntensity = Get value at time... midpoint Cubic
 				# get max intensity in range
-				# TODO
+				maxIntensity = Get maximum... start end Cubic
+
 
 				# load pitch object
 				select Pitch 'soundname$'
 				
 				# get the mean pitch for middle 60% span
 				pitch = Get mean... midstart midend Hertz
+				if pitch = undefined
+					pitch = -1
+				endif
 
 				# get max pitch in span
 				maxPitch = Get maximum... start end Hertz None
+				if maxPitch = undefined
+					maxPitch = -1
+				endif
 
 				# get max pitch in span
 				minPitch = Get minimum... start end Hertz None
+				if minPitch = undefined
+					minPitch = -1
+				endif
 
 				select TextGrid 'soundname$'
 				# get values of other tiers
@@ -141,7 +166,7 @@ for ifile to numberOfFiles
 				# Save result to text file:
 				#resultline$ = soundname$
 
-				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration'	'pitch'	'maxPitch'	'minPitch''newline$'"
+				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration'	'pitch'	'maxPitch'	'minPitch'	'f1'	'f2'	'f3'	'midIntensity'	'maxIntensity''newline$'"
 
 				fileappend "'resultfile$'" 'resultline$'
 				select TextGrid 'soundname$'
@@ -150,6 +175,8 @@ for ifile to numberOfFiles
 		# Remove the TextGrid object from the object list
 		select TextGrid 'soundname$'
 		plus Pitch 'soundname$'
+		plus Formant 'soundname$'
+		plus Intensity 'soundname$'
 		Remove
 	endif
 	# Remove the temporary objects from the object list
