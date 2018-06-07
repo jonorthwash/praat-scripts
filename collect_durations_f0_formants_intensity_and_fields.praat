@@ -4,6 +4,8 @@
 # - measures duration of each segment,
 # - measures f0 mean across middle 60%,
 # - measures f0 max and min across whole segment,
+# - measures intensity mean across middle 60%,
+# - measures max intensity across whole segment,
 # - outputs label of the segment in the main tier,
 # - outputs lables of other tiers at the midpoint of the specified tier,
 # and saves results to a text file.
@@ -67,7 +69,7 @@ endfor
 # Write a row with column titles to the result file:
 # (remember to edit this if you add or change the analyses!)
 
-titleline$ = "filename	'titleline$'	vowel	duration	f0	f0max	f0min	f1	f2	f3	intensity_max	intensity_mid'newline$'"
+titleline$ = "filename	'titleline$'	vowel	duration	f0	f0max	f0min	f1	f2	f3	intensity	intensity_max'newline$'"
 fileappend "'resultfile$'" 'titleline$'
 
 # Go through all the sound files, one by one:
@@ -123,8 +125,8 @@ for ifile to numberOfFiles
 
 				# load intensity object
 				select Intensity 'soundname$'
-				# get the intensity at midpoint
-				midIntensity = Get value at time... midpoint Cubic
+				# get the mean intensity
+				meanIntensity = Get value at time... midstart midend energy
 				# get max intensity in range
 				maxIntensity = Get maximum... start end Cubic
 
@@ -166,7 +168,7 @@ for ifile to numberOfFiles
 				# Save result to text file:
 				#resultline$ = soundname$
 
-				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration'	'pitch'	'maxPitch'	'minPitch'	'f1'	'f2'	'f3'	'midIntensity'	'maxIntensity''newline$'"
+				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration'	'pitch'	'maxPitch'	'minPitch'	'f1'	'f2'	'f3'	'meanIntensity'	'maxIntensity''newline$'"
 
 				fileappend "'resultfile$'" 'resultline$'
 				select TextGrid 'soundname$'
