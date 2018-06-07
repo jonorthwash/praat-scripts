@@ -126,7 +126,7 @@ for ifile to numberOfFiles
 				# load intensity object
 				select Intensity 'soundname$'
 				# get the mean intensity
-				meanIntensity = Get value at time... midstart midend energy
+				meanIntensity = Get mean... midstart midend energy
 				# get max intensity in range
 				maxIntensity = Get maximum... start end Cubic
 
