@@ -6,6 +6,8 @@
 # - measures f0 max and min across whole segment,
 # - measures intensity mean across middle 60%,
 # - measures max intensity across whole segment,
+# - measures formants (F1, F2, F3) at the midpoint,
+# - measures formant bandwidths (for F1, F2, F3) at the midpoint,
 # - outputs label of the segment in the main tier,
 # - outputs lables of other tiers at the midpoint of the specified tier,
 # and saves results to a text file.
@@ -69,7 +71,7 @@ endfor
 # Write a row with column titles to the result file:
 # (remember to edit this if you add or change the analyses!)
 
-titleline$ = "filename	'titleline$'	vowel	duration	f0	f0max	f0min	f1	f2	f3	intensity	intensity_max'newline$'"
+titleline$ = "filename	'titleline$'	vowel	duration	f0	f0max	f0min	f1	f2	f3	f1bw	f2bw	f3bw	intensity	intensity_max'newline$'"
 fileappend "'resultfile$'" 'titleline$'
 
 # Go through all the sound files, one by one:
@@ -123,6 +125,11 @@ for ifile to numberOfFiles
 				f2 = Get value at time... 2 midpoint Hertz Linear
 				f3 = Get value at time... 3 midpoint Hertz Linear
 
+				f1bw = Get bandwidth at time... 1 midpoint Hertz Linear
+				f2bw = Get bandwidth at time... 2 midpoint Hertz Linear
+				f3bw = Get bandwidth at time... 3 midpoint Hertz Linear
+
+
 				# load intensity object
 				select Intensity 'soundname$'
 				# get the mean intensity
@@ -152,6 +159,10 @@ for ifile to numberOfFiles
 					minPitch = -1
 				endif
 
+				# bandwidth
+
+				# spectral tilt
+
 				select TextGrid 'soundname$'
 				# get values of other tiers
 				otherValues$ = ""
@@ -168,7 +179,7 @@ for ifile to numberOfFiles
 				# Save result to text file:
 				#resultline$ = soundname$
 
-				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration'	'pitch'	'maxPitch'	'minPitch'	'f1'	'f2'	'f3'	'meanIntensity'	'maxIntensity''newline$'"
+				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration'	'pitch'	'maxPitch'	'minPitch'	'f1'	'f2'	'f3'	'f1bw'	'f2bw'	'f3bw'	'meanIntensity'	'maxIntensity''newline$'"
 
 				fileappend "'resultfile$'" 'resultline$'
 				select TextGrid 'soundname$'
