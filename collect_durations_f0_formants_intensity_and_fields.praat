@@ -8,6 +8,7 @@
 # - measures max intensity across whole segment,
 # - measures formants (F1, F2, F3) at the midpoint,
 # - measures formant bandwidths (for F1, F2, F3) at the midpoint,
+# - measures spectral tilt (H1-H2 in Hz)
 # - outputs label of the segment in the main tier,
 # - outputs lables of other tiers at the midpoint of the specified tier,
 # and saves results to a text file.
@@ -46,6 +47,9 @@ form Measure duration and pitch, and get segment labels
 	real Preemphasis_from_(Hz) 50
 endform
 
+# frequency window for H1 and H2 measurements
+frequency_window = 60
+
 # Here, you make a listing of all the sound files in a directory.
 # The example gets file names ending with ".wav" from D:\tmp\
 
@@ -71,7 +75,7 @@ endfor
 # Write a row with column titles to the result file:
 # (remember to edit this if you add or change the analyses!)
 
-titleline$ = "filename	'titleline$'	vowel	duration	f0	f0max	f0min	f1	f2	f3	f1bw	f2bw	f3bw	intensity	intensity_max'newline$'"
+titleline$ = "filename	'titleline$'	vowel	duration	f0	f0max	f0min	f1	f2	f3	f1bw	f2bw	f3bw	intensity	intensity_max	tilt'newline$'"
 fileappend "'resultfile$'" 'titleline$'
 
 # Go through all the sound files, one by one:
@@ -125,6 +129,7 @@ for ifile to numberOfFiles
 				f2 = Get value at time... 2 midpoint Hertz Linear
 				f3 = Get value at time... 3 midpoint Hertz Linear
 
+				# bandwidth
 				f1bw = Get bandwidth at time... 1 midpoint Hertz Linear
 				f2bw = Get bandwidth at time... 2 midpoint Hertz Linear
 				f3bw = Get bandwidth at time... 3 midpoint Hertz Linear
@@ -159,9 +164,36 @@ for ifile to numberOfFiles
 					minPitch = -1
 				endif
 
-				# bandwidth
 
 				# spectral tilt
+				# Inverse Filtered Sound (for h1, h2)
+				######################################
+				
+				select Sound 'soundname$'
+				Extract part... start end Hanning 1 yes
+				
+				# make long-term average spectrum
+				To Spectrum (fft)
+				To Ltas (1-to-1)
+				
+				lower_limit_h1 = pitch - frequency_window/2
+				# 200 +/- 1.75
+				upper_limit_h1 = pitch + frequency_window/2
+				lower_limit_h2 = (2*pitch) - frequency_window/2
+				upper_limit_h2 = (2*pitch) + frequency_window/2
+				
+				h1 = Get maximum... lower_limit_h1 upper_limit_h1 None
+				h2 = Get maximum... lower_limit_h2 upper_limit_h2 None
+				h1hz = Get frequency of maximum... lower_limit_h1 upper_limit_h1 None
+				h2hz = Get frequency of maximum... lower_limit_h2 upper_limit_h2 None
+
+				h1minush2 = h1 - h2
+				h1hzminush2hz = h1hz - h2hz
+
+				select Sound 'soundname$'_part
+				plus Spectrum 'soundname$'_part
+				plus Ltas 'soundname$'_part
+				Remove
 
 				select TextGrid 'soundname$'
 				# get values of other tiers
@@ -179,7 +211,7 @@ for ifile to numberOfFiles
 				# Save result to text file:
 				#resultline$ = soundname$
 
-				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration'	'pitch'	'maxPitch'	'minPitch'	'f1'	'f2'	'f3'	'f1bw'	'f2bw'	'f3bw'	'meanIntensity'	'maxIntensity''newline$'"
+				resultline$ = "'soundname$'	'otherValues$'	'label$'	'duration'	'pitch'	'maxPitch'	'minPitch'	'f1'	'f2'	'f3'	'f1bw'	'f2bw'	'f3bw'	'meanIntensity'	'maxIntensity'	'h1hzminush2hz''newline$'"
 
 				fileappend "'resultfile$'" 'resultline$'
 				select TextGrid 'soundname$'
