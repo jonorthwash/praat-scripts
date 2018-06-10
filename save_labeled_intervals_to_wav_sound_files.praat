@@ -165,7 +165,12 @@ for ifile to numberOfFiles
 			endif
 		endfor
 	endif
+	select Sound 'soundname$'
+	plus TextGrid 'soundname$'
+	Remove
 endfor
+select Strings list
+Remove
 
 #-------------
 # This procedure finds the number of a tier that has a given label.
